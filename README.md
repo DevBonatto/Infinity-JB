@@ -22,5 +22,5 @@ Para fazer alterações no código ou compilar uma nova versão, siga estes pass
 Para clonar o projeto, é **essencial** usar o comando `--recurse-submodules` para baixar as dependências (como `Jailbreak.Generic`).
 
 ```bash
-git clone --recurse-submodules [https://github.com/DevBonatto/Infinity-JB.git](https://github.com/DevBonatto/Infinity-JB.git)
+git clone --recurse-submodules https://github.com/DevBonatto/Infinity-JB.git
 cd Infinity-JB
