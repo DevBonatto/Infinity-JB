@@ -6,6 +6,9 @@ using Jailbreak.Public.Behaviors;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Utils;
+
 namespace Jailbreak;
 
 /// <summary>
@@ -48,23 +51,23 @@ public class Jailbreak : BasePlugin {
 
     scope = provider.CreateScope();
     extensions = scope.ServiceProvider.GetServices<IPluginBehavior>()
-     .ToImmutableList();
+      .ToImmutableList();
 
     Logger.LogInformation("[Jailbreak] Found {@BehaviorCount} behaviors.",
       extensions.Count);
 
     foreach (var extension in extensions) {
-      //	Register all event handlers on the extension object
+      //  Register all event handlers on the extension object
       RegisterAllAttributes(extension);
 
-      //	Tell the extension to start it's magic
+      //  Tell the extension to start it's magic
       extension.Start(this, hotReload);
 
       Logger.LogInformation("[Jailbreak] Loaded behavior {@Behavior}",
         extension.GetType().FullName);
     }
 
-    //	Expose the scope to other plugins
+    //  Expose the scope to other plugins
     Capabilities.RegisterPluginCapability(API.Provider, () => {
       if (scope == null)
         throw new InvalidOperationException(
@@ -84,11 +87,39 @@ public class Jailbreak : BasePlugin {
       foreach (var extension in extensions)
         extension.Dispose();
 
-    //	Dispose of original extensions scope
-    //	When loading again we will get a new scope to avoid leaking state.
+    //  Dispose of original extensions scope
+    //  When loading again we will get a new scope to avoid leaking state.
     scope?.Dispose();
     scope = null;
 
     base.Unload(hotReload);
+  }
+
+  [GameEventHandler]
+  public HookResult OnPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
+  {
+      var player = @event.Userid;
+
+      if (player == null || !player.IsValid || player.IsBot)
+      {
+          return HookResult.Continue;
+      }
+
+      AddTimer(0.1f, () =>
+      {
+          if (player.IsValid && player.PlayerPawn.IsValid)
+          {
+              player.RemoveWeapons();
+              player.GiveNamedItem("weapon_knife");
+
+              var pawn = player.PlayerPawn.Value;
+              if (pawn != null)
+              {
+                  pawn.ArmorValue = 0;
+              }
+          }
+      });
+
+      return HookResult.Continue;
   }
 }
